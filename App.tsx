@@ -11,7 +11,7 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -34,8 +34,8 @@ export default function App() {
   // Activation de la caméra arrière (mobile friendly)
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -53,10 +53,10 @@ export default function App() {
       canvasRef.current.width = videoRef.current.videoWidth;
       canvasRef.current.height = videoRef.current.videoHeight;
       context?.drawImage(videoRef.current, 0, 0);
-      
+
       const dataUrl = canvasRef.current.toDataURL('image/jpeg');
       const base64Data = dataUrl.split(',')[1];
-      
+
       setFileData({ mimeType: 'image/jpeg', data: base64Data });
       stopCamera();
     }
@@ -79,7 +79,7 @@ export default function App() {
 
     setIsProcessing(true);
     setError('');
-    
+
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const prompt = `Agis comme un extracteur de données professionnel. Analyse ce document et renvoie UNIQUEMENT un objet JSON valide contenant les clés suivantes (laisse null si l'info n'est pas trouvée) :
@@ -90,32 +90,14 @@ export default function App() {
       - "texteComplet" (l'intégralité du texte brut reconnu)
       Ne rajoute aucun texte avant ou après, pas de balises markdown.`;
 
-      const result = await model.generateContent([
-        prompt, 
+      const response = await model.generateContent([
+        prompt,
         { inlineData: { data: fileData.data, mimeType: fileData.mimeType } }
       ]);
-      
-      const responseText = result.response.text();
-      const cleanJson = responseText.replace(/```json/g, '').replace(/
-```/g, '').trim();
-```
 
-Remplace par ça (sur **UNE seule ligne**) :
+      const responseText = response.response.text();
+      const cleanJson = responseText.replace(/```(?:json)?/g, '').trim();
 
-```js
-const cleanJson = responseText.replace(/```(?:json)?/g, '').trim();
-```
-
-## 3. Commit
-
-Bouton **"Commit changes"** → Vercel redéploie tout seul.
-
----
-
-**Le point critique :** tout le `const cleanJson = ...trim();` doit tenir sur **une seule ligne**, sans aucun retour à la ligne au milieu. C'est le saut de ligne qui cassait le code.
-
-Si tu veux que je te donne le bloc exact à coller sans risque d'erreur, copie-moi les lignes 90 à 105 de ton `App.tsx` ici et je te renvoie la version corrigée prête à coller.
-      
       setResult(JSON.parse(cleanJson));
     } catch (err) {
       console.error(err);
@@ -145,7 +127,7 @@ Si tu veux que je te donne le bloc exact à coller sans risque d'erreur, copie-m
             Importer un fichier
             <input type="file" accept="image/*,application/pdf" onChange={handleFileUpload} />
           </label>
-          
+
           {!isCameraActive ? (
             <button className="btn outline" onClick={startCamera}>Ouvrir la caméra</button>
           ) : (
@@ -176,14 +158,14 @@ Si tu veux que je te donne le bloc exact à coller sans risque d'erreur, copie-m
               <h2>Données Extraites</h2>
               <button className="btn small" onClick={copyToClipboard}>Copier JSON</button>
             </div>
-            
+
             <div className="structured-data">
               <p><strong>Type :</strong> {result.typeDocument || 'Non détecté'}</p>
               <p><strong>Fournisseur :</strong> {result.nomFournisseur || 'Non détecté'}</p>
               <p><strong>Date :</strong> {result.date || 'Non détecté'}</p>
               <p><strong>Montant Total :</strong> {result.montantTotal || 'Non détecté'}</p>
             </div>
-            
+
             <h3>Texte Brut OCR</h3>
             <div className="scrollable-text">{result.texteComplet}</div>
           </div>
