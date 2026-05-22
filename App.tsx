@@ -98,6 +98,23 @@ export default function App() {
       const responseText = result.response.text();
       const cleanJson = responseText.replace(/```json/g, '').replace(/
 ```/g, '').trim();
+```
+
+Remplace par ça (sur **UNE seule ligne**) :
+
+```js
+const cleanJson = responseText.replace(/```(?:json)?/g, '').trim();
+```
+
+## 3. Commit
+
+Bouton **"Commit changes"** → Vercel redéploie tout seul.
+
+---
+
+**Le point critique :** tout le `const cleanJson = ...trim();` doit tenir sur **une seule ligne**, sans aucun retour à la ligne au milieu. C'est le saut de ligne qui cassait le code.
+
+Si tu veux que je te donne le bloc exact à coller sans risque d'erreur, copie-moi les lignes 90 à 105 de ton `App.tsx` ici et je te renvoie la version corrigée prête à coller.
       
       setResult(JSON.parse(cleanJson));
     } catch (err) {
